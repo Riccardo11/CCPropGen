@@ -12,6 +12,9 @@ namespace CCPropGen.Maui.Demo
         [ObservableProperty]
         string entryText;
 
+        [ObservableProperty]
+        int maxLength;
+
         partial void OnEntryTextChanged(string value)
         {
             System.Diagnostics.Debug.WriteLine(value);

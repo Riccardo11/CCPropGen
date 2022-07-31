@@ -36,13 +36,28 @@ namespace CCPropGen.Utils
 
                 if (i == 2)
                 {
-                    attributeValues.PropertyName = semanticModel.GetConstantValue(argument.Expression).ToString();
+                    var constantValue = semanticModel.GetConstantValue(argument.Expression);
+
+                    if (constantValue.HasValue)
+                    {
+                        attributeValues.PropertyNames = new string[] { constantValue.ToString() };
+                        continue;
+                    }
+
+                    attributeValues.PropertyNames = GetAttributeArgumentAsArray(semanticModel, argument.Expression, true);
                 }
 
                 if (i == 3)
                 {
                     var typeofOperation = semanticModel.GetOperation(argument.Expression) as ITypeOfOperation;
-                    attributeValues.PropertyType = GetFullyQualifiedTypeAsString(typeofOperation.TypeOperand);
+
+                    if (typeofOperation != null)
+                    {
+                        attributeValues.PropertyTypes = new string[] { GetFullyQualifiedTypeAsString(typeofOperation.TypeOperand) };
+                        continue;
+                    }
+
+                    attributeValues.PropertyTypes = GetAttributeArgumentAsArray(semanticModel, argument.Expression, false);
                 }
 
                 if (i > 3)
@@ -66,7 +81,7 @@ namespace CCPropGen.Utils
             return $"{typeSymbol.ContainingNamespace}.{typeSymbol.Name}";
         }
 
-        public static string GetBindablePropertyArguments(CCPropGenAttributeValues attributeValues, string className)
+        public static string GetBindablePropertyArguments(string controlType, string bindablePropertyName, string className)
         {
             return GeneratedClassConstants.BINDABLE_PROPERTY_PARAMETERS
                 .Select(par =>
@@ -77,11 +92,35 @@ namespace CCPropGen.Utils
                     }
                     else
                     {
-                        return attributeValues.ControlType + "." + attributeValues.BindablePropertyName + "." + par;
+                        return controlType + "." + bindablePropertyName + "." + par;
                     }
                 })
                 .Aggregate((s1, s2) => $"{s1},\n            {s2}");
         }
 
+
+        private static string[] GetAttributeArgumentAsArray(SemanticModel semanticModel, ExpressionSyntax expression, bool isString)
+        {
+            var arrayCreation = semanticModel.GetOperation(expression) as IArrayCreationOperation;
+
+            if (arrayCreation == null)
+            {
+                throw new ArgumentException("PropertyNames parameter must be a constant string or a new array of strings");
+            }
+
+            var arrayInitializerOperation = arrayCreation.Initializer;
+
+            if (isString)
+            {
+                return arrayInitializerOperation.ElementValues
+                .Select(value => value.ConstantValue.ToString())
+                .ToArray();
+            }
+
+            return arrayInitializerOperation.ElementValues
+                .Select(value => GetFullyQualifiedTypeAsString(
+                    (value as ITypeOfOperation).TypeOperand))
+                .ToArray();
+        }
     }
 }

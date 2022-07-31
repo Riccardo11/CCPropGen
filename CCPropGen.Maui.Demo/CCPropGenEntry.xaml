@@ -4,9 +4,6 @@
              x:Class="CCPropGen.Maui.Demo.CCPropGenEntry">
     <StackLayout>
         <Entry
-            x:Name="EntryControl"
-            Text="Welcome to .NET MAUI!"
-                VerticalOptions="Center" 
-                HorizontalOptions="Center" />
+            x:Name="EntryControl" />
     </StackLayout>
 </ContentView>

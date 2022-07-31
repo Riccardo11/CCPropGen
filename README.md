@@ -49,3 +49,29 @@ public partial class CCPropGenEntry : ContentView
 ```
 
 Now our custom control has a `Text`  property ready to be bound, that will be linked directly to the `Text` property of the `Entry`.
+
+## Generating multiple properties
+
+We may want to create more than one bindable property for our `Entry` control. Let's bind `MaxLength` property, too.
+
+The attribute can accept as arguments also two arrays containing properties names and properties types.
+
+```csharp
+using Maui.CCPropGen;
+
+namespace CCPropGen.Maui.Demo;
+
+[CCPropGen(
+    "EntryControl",
+    typeof(Entry),
+    new string[] { "Text", "MaxLength" },
+    new Type[] { typeof(string), typeof(int) })] 
+public partial class CCPropGenEntry : ContentView
+{
+	public CCPropGenEntry()
+	{
+		InitializeComponent();
+		InitializeCCPropGen();
+	}
+}
+```

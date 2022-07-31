@@ -50,7 +50,7 @@ namespace CCPropGen.Core.Generator
             context.AddSource($"{userClass.Identifier.Text}", generatedClass);
 
             //context.AddSource($"{userClass.Identifier.Text}.g.cs", generatedClass);
-            //Debug.WriteLine(generatedClass);
+            Debug.WriteLine(generatedClass);
         }
 
         public void Initialize(GeneratorInitializationContext context)
