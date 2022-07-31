@@ -39,7 +39,6 @@
 
             <local:CCPropGenEntry
                 Text="{Binding EntryText}"
-                MaxLength="{Binding MaxLength}"
                 />
 
             <Entry
