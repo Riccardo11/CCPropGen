@@ -76,7 +76,7 @@ public partial class CCPropGenEntry : ContentView
 }
 ```
 
-### Binding properties from different controls
+## Binding properties from different controls
 
 Consider the case where you have a complex custom control, which in turn contains many other controls.
 
