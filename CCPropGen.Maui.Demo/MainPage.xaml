@@ -41,6 +41,12 @@
                 Text="{Binding EntryText}"
                 />
 
+            <local:MultipleValuesEntry
+                Text="{Binding EntryText}"
+                MaxLength="{Binding MaxLength}"
+                Placeholder="Multiple Values"
+                />
+
             <Entry
                 Text="{Binding MaxLength}"
                 />
