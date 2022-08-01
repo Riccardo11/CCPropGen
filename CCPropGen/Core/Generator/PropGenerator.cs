@@ -21,36 +21,42 @@ namespace CCPropGen.Core.Generator
         {
             var syntaxReceiver = (CCPropSyntaxReceiver)context.SyntaxReceiver;
 
-            var userClass = syntaxReceiver.ControlClassSyntax;
-            if (userClass is null)
+            var userClasses = syntaxReceiver.ControlClassSyntaxesWithAttributes.Keys;
+            if (userClasses is null
+                || !userClasses.Any())
             {
                 return;
             }
 
-            var @namespace = context
-                .Compilation
-                .GetSemanticModel(userClass.SyntaxTree)
-                .GetDeclaredSymbol(userClass)
-                .ContainingNamespace;
-
-            if (@namespace is null)
+            foreach (var userClass in userClasses)
             {
-                return;
+                var @namespace = context
+                    .Compilation
+                    .GetSemanticModel(userClass.SyntaxTree)
+                    .GetDeclaredSymbol(userClass)
+                    .ContainingNamespace;
+                
+                if (@namespace is null)
+                {
+                    return;
+                }
+
+                var attributeValues = SourceGeneratorUtils.GetAttributeValues(
+                    context.Compilation,
+                    syntaxReceiver.ControlClassSyntaxesWithAttributes[userClass]);
+
+                var generatedClass = new SimpleSourceComposer
+                {
+                    Namespace = @namespace.ToString(),
+                    ClassName = userClass.Identifier.Text.ToString(),
+                    AttributeValues = attributeValues
+                }.BuildSource();
+
+                context.AddSource($"{userClass.Identifier.Text}", generatedClass);
+
+                //context.AddSource($"{userClass.Identifier.Text}.g.cs", generatedClass);
+                Debug.WriteLine(generatedClass);
             }
-
-            var attributeValues = SourceGeneratorUtils.GetAttributeValues(context.Compilation, syntaxReceiver.AttributeSyntax);
-
-            var generatedClass = new SimpleSourceComposer
-            {
-                Namespace = @namespace.ToString(),
-                ClassName = userClass.Identifier.Text.ToString(),
-                AttributeValues = attributeValues
-            }.BuildSource();
-
-            context.AddSource($"{userClass.Identifier.Text}", generatedClass);
-
-            //context.AddSource($"{userClass.Identifier.Text}.g.cs", generatedClass);
-            Debug.WriteLine(generatedClass);
         }
 
         public void Initialize(GeneratorInitializationContext context)
