@@ -41,7 +41,7 @@ namespace CCPropGen.Core.Generator
                     return;
                 }
 
-                var attributeValues = SourceGeneratorUtils.GetAttributeValues(
+                var attributeValues = SourceGeneratorUtils.GetAttributeValuesList(
                     context.Compilation,
                     syntaxReceiver.ControlClassSyntaxesWithAttributes[userClass]);
 
@@ -49,7 +49,7 @@ namespace CCPropGen.Core.Generator
                 {
                     Namespace = @namespace.ToString(),
                     ClassName = userClass.Identifier.Text.ToString(),
-                    AttributeValues = attributeValues
+                    AttributeValuesList = attributeValues
                 }.BuildSource();
 
                 context.AddSource($"{userClass.Identifier.Text}", generatedClass);

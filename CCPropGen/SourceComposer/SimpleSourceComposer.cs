@@ -12,15 +12,16 @@ namespace CCPropGen.SourceComposer
     {
         public string Namespace { get; set; }
         public string ClassName { get; set; }
-        public CCPropGenAttributeValues AttributeValues { get; set; }
+        public List<CCPropGenAttributeValues> AttributeValuesList { get; set; }
 
         public string BuildSource()
         {
             if (string.IsNullOrEmpty(Namespace)
                 || string.IsNullOrEmpty(ClassName)
-                || AttributeValues == null)
+                || AttributeValuesList == null
+                || !AttributeValuesList.Any())
             {
-                throw new ArgumentNullException($"{nameof(Namespace)}, {nameof(ClassName)} and {nameof(AttributeValues)} must not be null");
+                throw new ArgumentNullException($"{nameof(Namespace)}, {nameof(ClassName)} and {nameof(AttributeValuesList)} must not be null");
             }
 
             var source =
@@ -30,7 +31,6 @@ namespace CCPropGen.SourceComposer
     {{
         protected void InitializeCCPropGen()
         {{
-            {AttributeValues.ControlName}.BindingContext = this;
             {GetInitializePropertiesBody()}
         }}
 
@@ -54,13 +54,21 @@ namespace CCPropGen.SourceComposer
         {
             var sb = new StringBuilder();
 
-            for (int i = 0; i < AttributeValues.PropertyNames.Length; i++)
+            foreach (var attributeValues in AttributeValuesList)
             {
-                var propertyName = AttributeValues.PropertyNames[i];
-                var bindablePropertyName = $"{propertyName}Property";
+                sb.Append($@"{attributeValues.ControlName}.BindingContext = this;");
 
-                sb.Append($@"
-            {AttributeValues.ControlName}.SetBinding({AttributeValues.ControlType}.{bindablePropertyName}, ""{propertyName}"");");
+                for (int i = 0; i < attributeValues.PropertyNames.Length; i++)
+                {
+                    var propertyName = attributeValues.PropertyNames[i];
+                    var bindablePropertyName = $"{propertyName}Property";
+
+                    sb.Append($@"
+            {attributeValues.ControlName}.SetBinding({attributeValues.ControlType}.{bindablePropertyName}, ""{propertyName}"");");
+                }
+
+                sb.Append(@"
+            ");
             }
 
             return sb.ToString();
@@ -68,33 +76,37 @@ namespace CCPropGen.SourceComposer
 
         private string GetPropertiesString()
         {
-            var propertyNames = AttributeValues.PropertyNames;
-            var propertyTypes = AttributeValues.PropertyTypes;
-
-            if (propertyNames.Length != propertyTypes.Length)
-            {
-                throw new ArgumentException("Property names and property types must have the same length.");
-            }
-
             var sb = new StringBuilder();
 
-            for (int i = 0; i < propertyNames.Length; i++)
+            foreach (var attributeValues in AttributeValuesList)
             {
-                var propertyName = propertyNames[i];
-                var propertyType = propertyTypes[i];
-                var bindablePropertyName = $"{propertyName}Property";
+                var propertyNames = attributeValues.PropertyNames;
+                var propertyTypes = attributeValues.PropertyTypes;
 
-                sb.Append($@"public {propertyType} {propertyName}
+                if (propertyNames.Length != propertyTypes.Length)
+                {
+                    throw new ArgumentException("Property names and property types must have the same length.");
+                }
+
+
+                for (int i = 0; i < propertyNames.Length; i++)
+                {
+                    var propertyName = propertyNames[i];
+                    var propertyType = propertyTypes[i];
+                    var bindablePropertyName = $"{propertyName}Property";
+
+                    sb.Append($@"public {propertyType} {propertyName}
         {{
             get => ({propertyType})GetValue({bindablePropertyName});
             set => SetValue({bindablePropertyName}, value);
         }}
 
         public static readonly BindableProperty {bindablePropertyName} = BindableProperty.Create(
-            {SourceGeneratorUtils.GetBindablePropertyArguments(AttributeValues.ControlType, bindablePropertyName, ClassName)}
+            {SourceGeneratorUtils.GetBindablePropertyArguments(attributeValues.ControlType, bindablePropertyName, ClassName)}
             );
         
-        ");   
+        ");
+                }
             }
 
             return sb.ToString();

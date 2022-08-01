@@ -51,6 +51,11 @@
                 Text="{Binding MaxLength}"
                 />
 
+            <local:MultipleControlsView
+                Text="{Binding EntryText}"
+                FontSize="{Binding MaxLength}"
+                />
+
         </VerticalStackLayout>
     </ScrollView>
  
