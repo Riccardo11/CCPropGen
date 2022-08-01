@@ -13,66 +13,72 @@ namespace CCPropGen.Utils
 {
     internal static class SourceGeneratorUtils
     {
-        public static CCPropGenAttributeValues GetAttributeValues(Compilation compilation, AttributeSyntax attributeSyntax)
+        public static List<CCPropGenAttributeValues> GetAttributeValuesList(Compilation compilation, List<AttributeSyntax> attributeSyntaxList)
         {
-            var attributeValues = new CCPropGenAttributeValues();
+            List<CCPropGenAttributeValues> attributeValuesList = new();
 
-            var semanticModel = compilation.GetSemanticModel(attributeSyntax.SyntaxTree);
-
-            for (int i = 0; i < attributeSyntax.ArgumentList.Arguments.Count; i++)
+            foreach (var attributeSyntax in attributeSyntaxList)
             {
-                var argument = attributeSyntax.ArgumentList.Arguments[i];
 
-                if (i == 0)
+                var attributeValues = new CCPropGenAttributeValues();
+
+                var semanticModel = compilation.GetSemanticModel(attributeSyntax.SyntaxTree);
+
+                for (int i = 0; i < attributeSyntax.ArgumentList.Arguments.Count; i++)
                 {
-                    attributeValues.ControlName = semanticModel.GetConstantValue(argument.Expression).ToString();
-                }
+                    var argument = attributeSyntax.ArgumentList.Arguments[i];
 
-                if (i == 1)
-                {
-                    var typeofOperation = semanticModel.GetOperation(argument.Expression) as ITypeOfOperation;
-                    attributeValues.ControlType = GetFullyQualifiedTypeAsString(typeofOperation.TypeOperand);
-                }
-
-                if (i == 2)
-                {
-                    var constantValue = semanticModel.GetConstantValue(argument.Expression);
-
-                    if (constantValue.HasValue)
+                    if (i == 0)
                     {
-                        attributeValues.PropertyNames = new string[] { constantValue.ToString() };
-                        continue;
+                        attributeValues.ControlName = semanticModel.GetConstantValue(argument.Expression).ToString();
                     }
 
-                    attributeValues.PropertyNames = GetAttributeArgumentAsArray(semanticModel, argument.Expression, true);
-                }
-
-                if (i == 3)
-                {
-                    var typeofOperation = semanticModel.GetOperation(argument.Expression) as ITypeOfOperation;
-
-                    if (typeofOperation != null)
+                    if (i == 1)
                     {
-                        attributeValues.PropertyTypes = new string[] { GetFullyQualifiedTypeAsString(typeofOperation.TypeOperand) };
-                        continue;
+                        var typeofOperation = semanticModel.GetOperation(argument.Expression) as ITypeOfOperation;
+                        attributeValues.ControlType = GetFullyQualifiedTypeAsString(typeofOperation.TypeOperand);
                     }
 
-                    attributeValues.PropertyTypes = GetAttributeArgumentAsArray(semanticModel, argument.Expression, false);
+                    if (i == 2)
+                    {
+                        var constantValue = semanticModel.GetConstantValue(argument.Expression);
+
+                        if (constantValue.HasValue)
+                        {
+                            attributeValues.PropertyNames = new string[] { constantValue.ToString() };
+                            continue;
+                        }
+
+                        attributeValues.PropertyNames = GetAttributeArgumentAsArray(semanticModel, argument.Expression, true);
+                    }
+
+                    if (i == 3)
+                    {
+                        if (semanticModel.GetOperation(argument.Expression) is ITypeOfOperation typeofOperation)
+                        {
+                            attributeValues.PropertyTypes = new string[] { GetFullyQualifiedTypeAsString(typeofOperation.TypeOperand) };
+                            continue;
+                        }
+
+                        attributeValues.PropertyTypes = GetAttributeArgumentAsArray(semanticModel, argument.Expression, false);
+                    }
+
+                    if (i > 3)
+                    {
+                        var assignment = semanticModel.GetOperation(argument) as ISimpleAssignmentOperation;
+                        var field = assignment.Target as IFieldReferenceOperation;
+                        var propertyName = field.Field.Name.ToString();
+
+                        var value = assignment.Value.ConstantValue.Value;
+
+                        attributeValues.SetPropertyValue(propertyName, value);
+                    }
                 }
 
-                if (i > 3)
-                {
-                    var assignment = semanticModel.GetOperation(argument) as ISimpleAssignmentOperation;
-                    var field = assignment.Target as IFieldReferenceOperation;
-                    var propertyName = field.Field.Name.ToString();
-
-                    var value = assignment.Value.ConstantValue.Value;
-
-                    attributeValues.SetPropertyValue(propertyName, value);
-                }
+                attributeValuesList.Add(attributeValues);
             }
 
-            return attributeValues;
+            return attributeValuesList;
         }
 
         // Needed for those types like string, int, etc.

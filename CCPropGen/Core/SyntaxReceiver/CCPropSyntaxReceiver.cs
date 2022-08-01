@@ -8,7 +8,7 @@ namespace CCPropGen.Core.SyntaxReceiver
 {
     internal class CCPropSyntaxReceiver : ISyntaxReceiver
     {
-        public Dictionary<ClassDeclarationSyntax, AttributeSyntax> ControlClassSyntaxesWithAttributes { get; }
+        public Dictionary<ClassDeclarationSyntax, List<AttributeSyntax>> ControlClassSyntaxesWithAttributes { get; }
 
         public CCPropSyntaxReceiver()
         {
@@ -32,9 +32,18 @@ namespace CCPropGen.Core.SyntaxReceiver
 
                 foreach (var attribute in attributes.Attributes)
                 {
-                    if (attribute.Name.GetText().ToString() == AttributeConstants.ATTRIBUTE_NAME)
+                    if (attribute.Name.GetText().ToString() != AttributeConstants.ATTRIBUTE_NAME)
                     {
-                        ControlClassSyntaxesWithAttributes[classDeclarationSyntax] = attribute;
+                        continue;
+                    }
+
+                    if (ControlClassSyntaxesWithAttributes.ContainsKey(classDeclarationSyntax))
+                    {
+                        ControlClassSyntaxesWithAttributes[classDeclarationSyntax].Add(attribute);
+                    }
+                    else
+                    {
+                        ControlClassSyntaxesWithAttributes[classDeclarationSyntax] = new() { attribute };
                     }
                 }
             }
