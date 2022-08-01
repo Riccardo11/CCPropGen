@@ -68,10 +68,48 @@ namespace CCPropGen.Maui.Demo;
     new Type[] { typeof(string), typeof(int) })] 
 public partial class CCPropGenEntry : ContentView
 {
-	public CCPropGenEntry()
-	{
-		InitializeComponent();
-		InitializeCCPropGen();
-	}
+    public CCPropGenEntry()
+    {
+        InitializeComponent();
+        InitializeCCPropGen();
+    }
+}
+```
+
+### Binding properties from different controls
+
+Consider the case where you have a complex custom control, which in turn contains many other controls.
+
+Decorating multiple times with `CCPropGen` attribute your code-behind class allows you to bind different properties from different controls.
+
+`MultipleControlsView.xaml`
+```xaml
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CCPropGen.Maui.Demo.MultipleControlsView">
+    <StackLayout>
+        <Label x:Name="ControlLabel"
+               Text="Test" />
+        <Entry x:Name="ControlEntry" />
+    </StackLayout>
+</ContentView>
+```
+
+`MultipleControlsView.xaml.cs`
+```csharp
+using Maui.CCPropGen;
+
+namespace CCPropGen.Maui.Demo;
+
+[CCPropGen("ControlEntry", typeof(Entry), "Text", typeof(string))]
+[CCPropGen("ControlLabel", typeof(Label), "FontSize", typeof(double))]
+public partial class MultipleControlsView : ContentView
+{
+    public MultipleControlsView()
+    {
+        InitializeComponent();
+        InitializeCCPropGen();
+    }
 }
 ```
